@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node server/server.js"
+    "start:dev": "NODE_ENV=development node server/server.js",
+    "start:prod": "NODE_ENV=production node server/server.js",
+    "migrate:dev": "NODE_ENV=migrationsDev knex migrate:latest",
+    "migrate:prod": "NODE_ENV=migrationsProd knex migrate:latest"
   },
   "keywords": [],
   "author": "",
@@ -13,7 +16,7 @@
     "bcrypt": "^3.0.0",
     "bluebird": "^3.5.1",
     "body-parser": "^1.18.3",
-    "dotenv": "^6.2.0",
+    "dotenv-flow": "^0.2.0",
     "eslint-config-airbnb": "^17.1.0",
     "express": "^4.16.3",
     "joi": "^13.4.0",
