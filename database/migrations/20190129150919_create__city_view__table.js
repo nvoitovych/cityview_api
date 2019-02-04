@@ -1,5 +1,5 @@
 
-exports.up = knex => knex.schema.createTable('view', (table) => {
+exports.up = knex => knex.schema.createTable('city_view', (table) => {
   table.increments('id'); // id serial primary key
   table.string('name');
   table.text('description');
@@ -18,4 +18,4 @@ exports.up = knex => knex.schema.createTable('view', (table) => {
 
   table.foreign('user_id').references('id').inTable('user_credentials');
 });
-exports.down = knex => knex.schema.dropTable('view');
+exports.down = knex => knex.schema.dropTable('city_view');

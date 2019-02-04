@@ -1,7 +1,5 @@
-#Getting started
-
-**_`Database`_**
-Example(MySQL)
+###Getting started
+#####Database (MySQL)
 1. **Enter to mysql**
 <br>`mysql -u root -p`
 2. `CREATE DATABASE db_name;`
@@ -23,11 +21,13 @@ Example(MySQL)
 <br>in .env.* files(Reference: <a href="https://www.npmjs.com/package/dotenv-flow">dotenv-flow</a>)
 
 **_Migrations_**
-<br>_Note that when running any knex migrate command, it will use NODE_ENV implicitly._(Reference: <a href="https://knexjs.org/">knex migrate</a>)
 <br>Take a look on package.json script section:
 <br>`"migrate:dev": "NODE_ENV=migrationsDev knex migrate:latest"`,
 <br>`"migrate:prod": "NODE_ENV=migrationsProd knex migrate:latest"`,
 <br>`"rollback:dev": "NODE_ENV=migrationsDev knex migrate:rollback"`
+<br>_Note:_
+<br>Table with FK have to be created before related table.
+<br>Running any knex migrate command, it will use NODE_ENV implicitly.(Reference: <a href="https://knexjs.org/">knex migrate</a>)
 
 **Step-by-Step**
 1. Make previous actions(Database, DB settings)

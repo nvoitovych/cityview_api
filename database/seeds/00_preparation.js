@@ -1,6 +1,6 @@
 
 exports.seed = async (knex) => {
-  const views = await knex('view')
+  const views = await knex('city_view')
     .del()
     .catch((err) => {
       console.log('\nError del view: ', err.message);
