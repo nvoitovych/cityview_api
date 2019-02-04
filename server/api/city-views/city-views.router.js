@@ -1,12 +1,12 @@
 const express = require('express');
 const { getCityViewList, getCityViewDetail } = require('./city-views.controller');
+const { validateId } = require('./city-views.validator');
 
 
-// TODO: validation of params(id)
 const router = express.Router();
 
 router.get('/', getCityViewList);
-router.get('/:id', getCityViewDetail);
+router.get('/:id', validateId, getCityViewDetail);
 
 
 module.exports = router;

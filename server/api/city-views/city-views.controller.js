@@ -7,7 +7,7 @@ exports.getCityViewList = async (req, res) => {
 };
 
 exports.getCityViewDetail = async (req, res) => {
-  const cityViewId = req.params.id;
+  const { cityViewId } = req;
   const resultCityViews = await cityView.findById(cityViewId);
   res.status(200).send(resultCityViews);
 };
