@@ -1,35 +1,18 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const publicRouter = require('./router/publicRouter');
+const { handleInvalidReqBody } = require('./middleware/error-handlers/handle-invalid-req-body');
+const { handleError } = require('./middleware/error-handlers/handle-error');
+const { handle404Error } = require('./middleware/error-handlers/handle-404');
+const apiRouter = require('./api/api.router');
+
 
 const app = express();
 
-const addRawBody = (req, res, buf) => {
-  req.rawBody = buf.toString();
-};
-
 app.use(bodyParser.urlencoded({ extended: true }));
-// check is body valid JSON
-app.use((req, res, next) => {
-  bodyParser.json({
-    verify: addRawBody,
-  })(req, res, (err) => {
-    if (err) {
-      switch (err.code) {
-        default: {
-          res.status(400).send({ code: 400, status: 'BAD_REQUEST', message: 'Invalid data sent' });
-          break;
-        }
-      }
-    } else {
-      next();
-    }
-  });
-});
+app.use(handleInvalidReqBody);
+app.use('/', apiRouter);
+app.use(handle404Error);
+app.use(handleError);
 
-app.get('/', async (req, res) => {
-  res.status(200).send({ result: 'Oh, it`s you? Helllo' });
-});
-app.use('/public', publicRouter);
 
 module.exports = app;

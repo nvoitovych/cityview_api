@@ -1,12 +1,12 @@
 
-exports.up = knex => knex.schema.createTable('view', (table) => {
+exports.up = knex => knex.schema.createTable('city_view', (table) => {
   table.increments('id'); // id serial primary key
   table.string('name');
   table.text('description');
-  table.double('latitude');
-  table.double('longitude');
-  table.integer('year_of_origin');
-  table.string('photo_url');
+  table.double('latitude').notNullable();
+  table.double('longitude').notNullable();
+  table.integer('year_of_origin').notNullable();
+  table.string('photo_url').notNullable();
   table.string('street');
   table.string('city');
   table.string('region');
@@ -18,4 +18,4 @@ exports.up = knex => knex.schema.createTable('view', (table) => {
 
   table.foreign('user_id').references('id').inTable('user_credentials');
 });
-exports.down = knex => knex.schema.dropTable('view');
+exports.down = knex => knex.schema.dropTable('city_view');
