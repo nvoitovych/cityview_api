@@ -6,20 +6,21 @@ const validateCityViewIdInURL = async (req, res, next) => {
 
   const cityViewIdSchema = Joi.number().min(1).required();
   const cityViewIdValidationResult = await Joi.validate(cityViewId, cityViewIdSchema).catch((error) => {
-    switch (error.code) {
+    switch (error.name) {
+      case 'ValidationError': {
+        res.status(400).send(({ code: 400, status: 'BAD_REQUEST', message: 'Invalid city view id in URL' }));
+        break;
+      }
       default: {
         res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
         break;
       }
     }
   });
+  if (typeof cityViewIdValidationResult === 'undefined') return;
 
-  if (cityViewIdValidationResult.error) {
-    res.status(400).send(({ code: 400, status: 'BAD_REQUEST', message: 'Invalid city view id in URL' }));
-  } else {
-    req.app.locals.cityViewId = cityViewId;
-    next();
-  }
+  req.app.locals.cityViewId = cityViewId;
+  next();
 };
 
 const validateCityViewReqBody = async (req, res, next) => {
@@ -45,18 +46,19 @@ const validateCityViewReqBody = async (req, res, next) => {
   }).required();
 
   const cityViewValidationResult = await Joi.validate(cityView, cityViewObjSchema).catch((error) => {
-    switch (error.code) {
+    switch (error.name) {
+      case 'ValidationError': {
+        res.status(400).send(({ code: 400, status: 'BAD_REQUEST', message: 'Invalid city view parameters' }));
+        break;
+      }
       default: {
         res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
         break;
       }
     }
   });
+  if (typeof cityViewValidationResult === 'undefined') return;
 
-  if (cityViewValidationResult.error) {
-    res.status(400).send(({ code: 400, status: 'BAD_REQUEST', message: 'Invalid city view parameters' }));
-    return;
-  }
   req.app.locals.cityViewObj = cityView;
   next();
 };
