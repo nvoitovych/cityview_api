@@ -1,12 +1,17 @@
 const express = require('express');
-const { getCityViewList, getCityViewDetail } = require('./city-views.controller');
-const { validateId } = require('./city-views.validator');
+const { getCityViewList, getCityViewDetail, createCityView } = require('./city-views.controller');
+const { validateId, validateBody } = require('./city-views.validator');
 
 
-const router = express.Router();
+const publicRouter = express.Router();
+const privateRouter = express.Router();
 
-router.get('/', getCityViewList);
-router.get('/:id', validateId, getCityViewDetail);
+publicRouter.get('/', getCityViewList);
+publicRouter.get('/:id', validateId, getCityViewDetail);
 
+privateRouter.post('/', validateBody, createCityView);
 
-module.exports = router;
+module.exports = {
+  publicRouter,
+  privateRouter,
+};

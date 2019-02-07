@@ -1,12 +1,12 @@
 const express = require('express');
-const authRouter = require('./auth/auth.router');
-const cityViewsRouter = require('./city-views/city-views.router');
+const privateRouter = require('./private-api.router');
+const publicRouter = require('./public-api.router');
 
 
 const router = express.Router();
 
-router.use('/public/auth', authRouter);
-router.use('/public/city-views', cityViewsRouter);
+router.use('/public', publicRouter);
+router.use('/private', privateRouter);
 
 
 module.exports = router;
