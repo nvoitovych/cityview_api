@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 const Joi = require('joi');
 
 const validateAuthReqBody = async (req, res, next) => {
@@ -10,8 +11,23 @@ const validateAuthReqBody = async (req, res, next) => {
     password: Joi.string().regex(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/).required(),
   });
 
-  const emailValidationResult = Joi.validate({ email }, emailSchema);
-  const passwordValidationResult = Joi.validate({ password }, passwordSchema);
+  const emailValidationResult = await Joi.validate({ email }, emailSchema).catch((error) => {
+    switch (error.code) {
+      default: {
+        res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+        break;
+      }
+    }
+  });
+
+  const passwordValidationResult = await Joi.validate({ password }, passwordSchema).catch((error) => {
+    switch (error.code) {
+      default: {
+        res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+        break;
+      }
+    }
+  });
 
   if (emailValidationResult.error) {
     if (passwordValidationResult.error) res.status(400).send({ code: 400, status: 'BAD_REQUEST', message: 'Invalid email and password' });

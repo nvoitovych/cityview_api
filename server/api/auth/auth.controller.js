@@ -6,7 +6,7 @@ const { user } = require('../../services/users.service');
 const { TOKEN_SECRET } = process.env;
 
 
-exports.registerUser = async (req, res) => {
+const registerUser = async (req, res) => {
   const { email, password } = req.app.locals;
 
   const hashedPassword = await bcrypt.hash(password, 10).catch((error) => {
@@ -50,7 +50,7 @@ exports.registerUser = async (req, res) => {
   res.status(200).send({ token });
 };
 
-exports.loginUser = async (req, res) => {
+const loginUser = async (req, res) => {
   const { email, password } = req.app.locals;
 
   const resultUser = await user.findByEmail(email).catch((error) => {
@@ -97,4 +97,10 @@ exports.loginUser = async (req, res) => {
   if (typeof token === 'undefined') return;
 
   res.status(200).send({ token });
+};
+
+
+module.exports = {
+  registerUser,
+  loginUser,
 };
