@@ -1,7 +1,7 @@
 
 exports.up = knex => knex.schema.createTable('city_view', (table) => {
   table.increments('id'); // id serial primary key
-  table.string('name');
+  table.string('name').notNullable();
   table.text('description');
   table.double('latitude').notNullable();
   table.double('longitude').notNullable();
@@ -14,7 +14,7 @@ exports.up = knex => knex.schema.createTable('city_view', (table) => {
   table.integer('user_id').unsigned();
   table.timestamp('updated_at', false);
   table.datetime('created_at').notNullable();
-  table.enu('status', ['banned', 'active']);
+  table.enu('status', ['banned', 'active', 'processing']).notNullable();
 
   table.foreign('user_id').references('id').inTable('user_credentials');
 });

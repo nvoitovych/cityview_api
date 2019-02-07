@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 const knex = require('./database.service');
 const mapper = require('../helpers/entity-mapper');
 
@@ -18,10 +19,30 @@ const cityViewFindAll = async () => {
   return [];
 };
 
+const createOneCityView = async ({
+  userId, name, description, latitude, longitude, yearOfOrigin, status, createdAt, street, city, region, country,
+}) => knex('city_view')
+  .insert({
+    user_id: userId,
+    name,
+    description,
+    latitude,
+    longitude,
+    year_of_origin: yearOfOrigin,
+    status,
+    created_at: createdAt,
+    street,
+    city,
+    region,
+    country,
+  })
+  .returning('id');
+
 
 module.exports = {
   cityView: {
     findAll: cityViewFindAll,
     findById: cityViewFindById,
+    createOne: createOneCityView,
   },
 };
