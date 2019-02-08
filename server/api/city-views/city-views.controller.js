@@ -49,7 +49,7 @@ const createCityView = async (req, res) => {
       // on trying to add city_view with user_id which doesn`t exist
       switch (error.code) {
         case 'ER_NO_REFERENCED_ROW_2': {
-          res.status(500).send({ code: 401, status: 'UNAUTHORIZED', message: 'Token is invalid. There is no user with this token' });
+          res.status(401).send({ code: 401, status: 'UNAUTHORIZED', message: 'Token is invalid. There is no user with this token' });
           break;
         }
         default: {

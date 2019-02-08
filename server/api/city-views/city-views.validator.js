@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 const Joi = require('joi');
 
+
 const validateCityViewIdInURL = async (req, res, next) => {
   const cityViewId = parseInt(req.params.id, 10);
 
@@ -62,6 +63,7 @@ const validateCityViewReqBody = async (req, res, next) => {
   req.app.locals.cityViewObj = cityView;
   next();
 };
+
 
 module.exports = {
   validateId: validateCityViewIdInURL,

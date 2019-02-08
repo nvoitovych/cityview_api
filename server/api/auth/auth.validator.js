@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 const Joi = require('joi');
 
+
 const validateAuthReqBody = async (req, res, next) => {
   const { email, password } = req.body;
 
@@ -43,6 +44,7 @@ const validateAuthReqBody = async (req, res, next) => {
   req.app.locals.password = password;
   next();
 };
+
 
 module.exports = {
   validateAuthReqBody,
