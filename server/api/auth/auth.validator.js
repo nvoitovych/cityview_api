@@ -46,6 +46,38 @@ const validateAuthReqBody = async (req, res, next) => {
 };
 
 
+const validateEmailConfirmationToken = async (req, res, next) => {
+  const confirmationToken = req.params.token;
+  const confirmationTokenInt = parseInt(confirmationToken, 16);
+  if (confirmationTokenInt === 'NaN') {
+    res.status(400).send(({ code: 400, status: 'BAD_REQUEST', message: 'Invalid email confirmation token' }));
+    return;
+  }
+
+  const emailConfirmationTokenSchema = Joi.object().keys({
+    confirmationToken: Joi.string().required(),
+  });
+
+  const tokenValidationResult = await Joi.validate({ confirmationToken }, emailConfirmationTokenSchema).catch((error) => {
+    switch (error.name) {
+      case 'ValidationError': {
+        res.status(400).send(({ code: 400, status: 'BAD_REQUEST', message: 'Invalid email confirmation token' }));
+        break;
+      }
+      default: {
+        res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+        break;
+      }
+    }
+  });
+  if (typeof tokenValidationResult === 'undefined') return;
+
+  req.app.locals.confirmationToken = confirmationToken;
+  next();
+};
+
+
 module.exports = {
   validateAuthReqBody,
+  validateEmailConfirmationToken,
 };
