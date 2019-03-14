@@ -6,6 +6,8 @@ const { user } = require('../../services/users.service');
 const {
   generateEmailConfirmationToken, decodeEmailConfirmationToken,
   sendEmailConfirmationToken, createUserAndAccount,
+  // generateResetPasswordToken, decodeResetPasswordToken,
+  // sendResetPasswordToken,
 } = require('../../services/auth.service');
 
 const { TOKEN_SECRET } = process.env;
@@ -197,9 +199,100 @@ const confirmEmail = async (req, res) => {
   res.status(200).send({ token });
 };
 
+// const forgotPassword = async (req, res) => {
+//   const { email } = req.app.locals;
+//
+//   const resultUser = await user.findByEmail(email).catch((error) => {
+//     switch (error.code) {
+//       case 'USER_NOT_FOUND': {
+//         res.status(401).send({ code: 401, status: 'NOT_FOUND', message: 'There is no User with this email' });
+//         break;
+//       }
+//       default: {
+//         res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+//       }
+//     }
+//   });
+//   if (typeof resultUser === 'undefined') return;
+//
+//   if (!resultUser.isActive) {
+//     res.status(403).send({ code: 403, status: 'FORBIDDEN', message: 'Email not confirmed' });
+//     return;
+//   }
+//
+//   const generatedToken = await generateResetPasswordToken(resultUser).catch((error) => {
+//     switch (error.code) {
+//       default: {
+//         res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+//         break;
+//       }
+//     }
+//   });
+//   if (typeof generatedToken === 'undefined') return;
+//
+//   const sendingResult = await sendResetPasswordToken(generatedToken, email).catch((error) => {
+//     console.error(`Error during email sending: ${error}`);
+//     switch (error.code) {
+//       default: {
+//         res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+//       }
+//     }
+//   });
+//   if (typeof sendingResult === 'undefined') return;
+//
+//   res.status(200).send({ success: true }); // reset password token is send
+// };
+
+const resendEmailConfirmationToken = async (req, res) => {
+  const { email } = req.app.locals;
+
+  const resultUser = await user.findByEmail(email).catch((error) => {
+    switch (error.code) {
+      case 'USER_NOT_FOUND': {
+        res.status(400).send({ code: 400, status: 'BAD_REQUEST', message: 'User email is not found in system' });
+        break;
+      }
+      default: {
+        res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+      }
+    }
+  });
+  if (typeof resultUser === 'undefined') return;
+
+  if (resultUser.isActive) {
+    res.status(400).send({ code: 400, status: 'BAD_REQUEST', message: 'User email had been already confirmed' });
+    return;
+  }
+
+  const generatedToken = await generateEmailConfirmationToken(resultUser).catch((error) => {
+    switch (error.code) {
+      default: {
+        res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+        break;
+      }
+    }
+  });
+  if (typeof generatedToken === 'undefined') return;
+
+  const sendingResult = await sendEmailConfirmationToken(generatedToken, email).catch((error) => {
+    console.error(`Error during email sending: ${error}`);
+    switch (error.code) {
+      default: {
+        res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+      }
+    }
+  });
+  if (typeof sendingResult === 'undefined') return;
+
+  res.status(200).send({ success: true }); // user is registered AND confirmation mail is sent
+};
+
 
 module.exports = {
   registerUser,
   loginUser,
   confirmEmail,
+  // forgotPassword,
+  // resetPassword,
+  resendEmailConfirmationToken,
 };

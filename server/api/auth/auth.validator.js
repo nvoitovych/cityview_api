@@ -45,6 +45,31 @@ const validateAuthReqBody = async (req, res, next) => {
   next();
 };
 
+const validateLogin = async (req, res, next) => {
+  const { email, password } = req.body;
+
+  const emailSchema = Joi.object().keys({
+    email: Joi.string().email({ minDomainAtoms: 2 }).required(),
+  });
+
+  const emailValidationResult = await Joi.validate({ email }, emailSchema).catch((error) => {
+    switch (error.name) {
+      case 'ValidationError': {
+        res.status(400).send(({ code: 400, status: 'BAD_REQUEST', message: 'Invalid email' }));
+        break;
+      }
+      default: {
+        res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+        break;
+      }
+    }
+  });
+  if (typeof emailValidationResult === 'undefined') return;
+
+  req.app.locals.email = email;
+  req.app.locals.password = password;
+  next();
+};
 
 const validateEmailConfirmationToken = async (req, res, next) => {
   const confirmationToken = req.query.token;
@@ -80,4 +105,5 @@ const validateEmailConfirmationToken = async (req, res, next) => {
 module.exports = {
   validateAuthReqBody,
   validateEmailConfirmationToken,
+  validateLogin,
 };

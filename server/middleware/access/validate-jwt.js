@@ -3,6 +3,7 @@ const jwt = BlueBird.promisifyAll(require('jsonwebtoken'));
 
 const { TOKEN_SECRET } = process.env;
 
+
 // TODO: verifyJWT or validateJWT: rename file or export function
 // checks is JWT present in Authorzation header and is it valid
 const validateJWT = async (req, res, next) => {
