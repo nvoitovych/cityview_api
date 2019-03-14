@@ -47,7 +47,7 @@ const validateAuthReqBody = async (req, res, next) => {
 
 
 const validateEmailConfirmationToken = async (req, res, next) => {
-  const confirmationToken = req.params.token;
+  const confirmationToken = req.query.token;
   const confirmationTokenInt = parseInt(confirmationToken, 16);
   if (confirmationTokenInt === 'NaN') {
     res.status(400).send(({ code: 400, status: 'BAD_REQUEST', message: 'Invalid email confirmation token' }));

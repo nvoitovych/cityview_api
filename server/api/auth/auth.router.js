@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.post('/register', validateAuthReqBody, registerUser);
 router.post('/login', validateAuthReqBody, loginUser);
-router.get('/confirm-email/:token', validateEmailConfirmationToken, confirmEmail);
+router.get('/confirm-email/', validateEmailConfirmationToken, confirmEmail);
 
 
 module.exports = router;

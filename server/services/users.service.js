@@ -52,12 +52,12 @@ const accountFindOneByUserId = async (userId) => {
 const accountFind = async () => mapper.account.many.toJson(await knex('account').select('*'));
 const userFind = async () => mapper.user.many.toJson(await knex('user_credentials').select('*'));
 
+
 module.exports = {
   user: {
     find: userFind,
     findById: userFindById,
     findByEmail: userFindByEmail,
-    // create: createUserAndAccount,
     update: userUpdate,
   },
   account: {

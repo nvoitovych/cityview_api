@@ -5,7 +5,7 @@ const { TOKEN_SECRET } = process.env;
 
 // TODO: verifyJWT or validateJWT: rename file or export function
 // checks is JWT present in Authorzation header and is it valid
-const validateJwt = async (req, res, next) => {
+const validateJWT = async (req, res, next) => {
   const authorizationHeaderExists = req.headers.authorization;
 
   if (!authorizationHeaderExists) {
@@ -53,5 +53,5 @@ const validateJwt = async (req, res, next) => {
 
 
 module.exports = {
-  validateJwt,
+  validateJWT,
 };

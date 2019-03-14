@@ -9,10 +9,6 @@ const {
 } = require('../../services/auth.service');
 
 const { TOKEN_SECRET } = process.env;
-/*
-TODO: git push with auth functionality
-TODO: replace JWS with JWE token generation and decoding
-*/
 
 
 const registerUser = async (req, res) => {
@@ -56,7 +52,7 @@ const registerUser = async (req, res) => {
   if (typeof generatedToken === 'undefined') return;
 
   const sendingResult = await sendEmailConfirmationToken(generatedToken, email).catch((error) => {
-    console.log(`Error during email sending: ${error}`);
+    console.error(`Error during email sending: ${error}`);
     switch (error.code) {
       default: {
         res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
@@ -138,6 +134,14 @@ const confirmEmail = async (req, res) => {
         }
         case 'TOKEN_IS_MALFORMED': {
           res.status(400).send({ code: 400, status: 'BAD_REQUEST', message: 'Confirmation token is malformed' });
+          break;
+        }
+        case 'JWE_DEFAULT_ERROR': {
+          res.status(400).send({ code: 400, status: 'BAD_REQUEST', message: 'Confirmation token is not valid' });
+          break;
+        }
+        case 'ALGORITHM_NOT_ALLOWED': {
+          res.status(400).send({ code: 400, status: 'BAD_REQUEST', message: 'Confirmation token is not valid' });
           break;
         }
         default: {
