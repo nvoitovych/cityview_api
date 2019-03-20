@@ -15,6 +15,7 @@ const {
 
 const router = express.Router();
 
+// TODO: add google/facebook auth(sign up/in)
 router.post('/register', validateEmail, validatePassword, registerUser);
 router.get('/confirm-email/', validateEmailConfirmationToken, confirmEmail);
 router.post('/login', validateEmail, validatePassword, loginUser);
