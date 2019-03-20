@@ -238,7 +238,6 @@ const forgotPassword = async (req, res) => {
   });
   if (typeof generatedCode === 'undefined') return;
 
-  // todo: save generated code in redis, and check during password change
   const codeSavingResult = await savePasswordResetCode(generatedCode, email).catch((error) => {
     console.error(`Error during password reset code saving in Redis: ${error}`);
     switch (error.code) {

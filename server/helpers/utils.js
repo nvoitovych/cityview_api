@@ -1,3 +1,4 @@
+// todo: add validation statements of environment
 const validateEnvSync = ({ PORT }) => {
   if (PORT === null
     || PORT === ''

@@ -131,7 +131,6 @@ const validatePasswordResetCode = async (req, res, next) => {
   const codeSchema = Joi.number().min(0).max(999999).required();
 
   const codeValidationResult = await Joi.validate(code, codeSchema).catch((error) => {
-    console.log(typeof code);
     console.error('codeValidationResult | error: ', error);
     switch (error.name) {
       case 'ValidationError': {
