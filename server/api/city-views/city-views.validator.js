@@ -24,6 +24,7 @@ const validateCityViewIdInURL = async (req, res, next) => {
   next();
 };
 
+// TODO: add photo validation
 const validateCityViewReqBody = async (req, res, next) => {
   const cityView = {
     name: req.body.name,

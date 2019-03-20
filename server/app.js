@@ -1,4 +1,4 @@
-require('../config/configEnv');
+require('../config/config-env');
 const express = require('express');
 const bodyParser = require('body-parser');
 const apiRouter = require('./api/api.router');

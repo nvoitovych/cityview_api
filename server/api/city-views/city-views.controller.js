@@ -32,6 +32,10 @@ const getCityViewDetail = async (req, res) => {
   res.status(200).send(resultCityViews);
 };
 
+// todo: ask about autocomliting
+// todo: add google/facebook auth(sign up/in)
+// TODO: add extracting address from latitude, longitude(with google places API)
+// TODO: add photo saving in google storage
 const createCityView = async (req, res) => {
   const { cityViewObj } = req.app.locals;
   const street = '';

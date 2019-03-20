@@ -1,4 +1,4 @@
-require('./config/configEnv');
+require('./config/config-env');
 
 
 // TODO: check does db properly work with cyrilic, etc encodings

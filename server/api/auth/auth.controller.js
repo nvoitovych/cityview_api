@@ -6,8 +6,8 @@ const { user } = require('../../services/users.service');
 const {
   generateEmailConfirmationToken, decodeEmailConfirmationToken,
   sendEmailConfirmationToken, createUserAndAccount,
-  // generateResetPasswordToken, decodeResetPasswordToken,
-  // sendResetPasswordToken,
+  generateRandomCode, sendResetPasswordCode,
+  savePasswordResetCode, getPasswordResetCodeByEmail,
 } = require('../../services/auth.service');
 
 const { TOKEN_SECRET } = process.env;
@@ -125,6 +125,7 @@ const confirmEmail = async (req, res) => {
 
   const decodedConfirmationToken = await decodeEmailConfirmationToken(confirmationToken)
     .catch((error) => {
+      console.error('decodedConfirmationToken | error: ', error);
       switch (error.code) {
         case 'TOKEN_EXPIRED_ERROR': {
           res.status(400).send({ code: 400, status: 'BAD_REQUEST', message: 'Confirmation token is expired' });
@@ -154,7 +155,10 @@ const confirmEmail = async (req, res) => {
   if (typeof decodedConfirmationToken === 'undefined') {
     return;
   }
+
   const resultUser = await user.findById(decodedConfirmationToken.id).catch((error) => {
+    console.error('resultUser | error: ', error);
+
     switch (error.code) {
       case 'USER_NOT_FOUND': {
         res.status(400).send({ code: 400, status: 'BAD_REQUEST', message: 'Invalid email confirmation token' });
@@ -172,7 +176,9 @@ const confirmEmail = async (req, res) => {
     return;
   }
   resultUser.isActive = true;
-  const updatedUser = await user.update(resultUser).catch((error) => {
+  const updatedUser = await user.updateById(resultUser).catch((error) => {
+    console.error('updatedUser | error: ', error);
+
     switch (error.code) {
       default: {
         res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
@@ -187,6 +193,8 @@ const confirmEmail = async (req, res) => {
       exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7),
     }, TOKEN_SECRET)
     .catch((error) => {
+      console.error('token | error: ', error);
+
       switch (error.code) {
         default: {
           res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
@@ -199,54 +207,66 @@ const confirmEmail = async (req, res) => {
   res.status(200).send({ token });
 };
 
-// const forgotPassword = async (req, res) => {
-//   const { email } = req.app.locals;
-//
-//   const resultUser = await user.findByEmail(email).catch((error) => {
-//     switch (error.code) {
-//       case 'USER_NOT_FOUND': {
-//         res.status(401).send({ code: 401, status: 'NOT_FOUND', message: 'There is no User with this email' });
-//         break;
-//       }
-//       default: {
-//         res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
-//       }
-//     }
-//   });
-//   if (typeof resultUser === 'undefined') return;
-//
-//   if (!resultUser.isActive) {
-//     res.status(403).send({ code: 403, status: 'FORBIDDEN', message: 'Email not confirmed' });
-//     return;
-//   }
-//
-//   const generatedToken = await generateResetPasswordToken(resultUser).catch((error) => {
-//     switch (error.code) {
-//       default: {
-//         res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
-//         break;
-//       }
-//     }
-//   });
-//   if (typeof generatedToken === 'undefined') return;
-//
-//   const sendingResult = await sendResetPasswordToken(generatedToken, email).catch((error) => {
-//     console.error(`Error during email sending: ${error}`);
-//     switch (error.code) {
-//       default: {
-//         res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
-//       }
-//     }
-//   });
-//   if (typeof sendingResult === 'undefined') return;
-//
-//   res.status(200).send({ success: true }); // reset password token is send
-// };
+const forgotPassword = async (req, res) => {
+  const { email } = req.app.locals;
+
+  const resultUser = await user.findByEmail(email).catch((error) => {
+    switch (error.code) {
+      case 'USER_NOT_FOUND': {
+        res.status(401).send({ code: 401, status: 'UNAUTHORIZED', message: 'There is no User with this email' });
+        break;
+      }
+      default: {
+        res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+      }
+    }
+  });
+  if (typeof resultUser === 'undefined') return;
+
+  if (!resultUser.isActive) {
+    res.status(403).send({ code: 403, status: 'FORBIDDEN', message: 'Email not confirmed' });
+    return;
+  }
+
+  const generatedCode = await generateRandomCode(0, 999999).catch((error) => {
+    switch (error.code) {
+      default: {
+        res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+        break;
+      }
+    }
+  });
+  if (typeof generatedCode === 'undefined') return;
+
+  // todo: save generated code in redis, and check during password change
+  const codeSavingResult = await savePasswordResetCode(generatedCode, email).catch((error) => {
+    console.error(`Error during password reset code saving in Redis: ${error}`);
+    switch (error.code) {
+      default: {
+        res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+      }
+    }
+  });
+  if (typeof codeSavingResult === 'undefined') return;
+
+  const sendingResult = await sendResetPasswordCode(generatedCode, email).catch((error) => {
+    console.error(`Error during email sending: ${error}`);
+    switch (error.code) {
+      default: {
+        res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+      }
+    }
+  });
+  if (typeof sendingResult === 'undefined') return;
+
+  res.status(200).send({ success: true }); // reset password token is send
+};
 
 const resendEmailConfirmationToken = async (req, res) => {
   const { email } = req.app.locals;
 
   const resultUser = await user.findByEmail(email).catch((error) => {
+    console.error('resultUser | error: ', error);
     switch (error.code) {
       case 'USER_NOT_FOUND': {
         res.status(400).send({ code: 400, status: 'BAD_REQUEST', message: 'User email is not found in system' });
@@ -264,7 +284,8 @@ const resendEmailConfirmationToken = async (req, res) => {
     return;
   }
 
-  const generatedToken = await generateEmailConfirmationToken(resultUser).catch((error) => {
+  const generatedToken = await generateEmailConfirmationToken(resultUser.id).catch((error) => {
+    console.error('generatedToken | error: ', error);
     switch (error.code) {
       default: {
         res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
@@ -287,12 +308,63 @@ const resendEmailConfirmationToken = async (req, res) => {
   res.status(200).send({ success: true }); // user is registered AND confirmation mail is sent
 };
 
+const resetForgottenPassword = async (req, res) => {
+  const { email, code, password } = req.app.locals;
+  const cachedCode = await getPasswordResetCodeByEmail(email).catch((error) => {
+    console.error(`Error during password reset code saving in Redis: ${error}`);
+    switch (error.code) {
+      case 'CODE_NOT_FOUND': {
+        res.status(400).send({ code: 400, status: 'BAD_REQUEST', message: 'Code is expired' });
+        break;
+      }
+      default: {
+        res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+      }
+    }
+  });
+  if (typeof cachedCode === 'undefined') return;
+
+  if (code !== cachedCode) {
+    res.status(400).send({ code: 400, status: 'BAD_REQUEST', message: 'Invalid code' });
+    return;
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10).catch((error) => {
+    console.error('hashedPassword | error: ', error);
+    switch (error.code) {
+      default: {
+        res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+        break;
+      }
+    }
+  });
+  if (typeof hashedPassword === 'undefined') return;
+
+  const resultUser = await user.updateByEmail({ email, password: hashedPassword })
+    .catch((error) => {
+      console.error('resultUser | error: ', error);
+      switch (error.code) {
+        case 'ER_DUP_ENTRY': {
+          res.status(409).send({ code: 409, status: 'CONFLICT', message: 'User already exists' });
+          break;
+        }
+        default: {
+          res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+          break;
+        }
+      }
+    });
+  if (typeof resultUser === 'undefined') return;
+
+  res.status(200).send({ success: true });
+};
+
 
 module.exports = {
   registerUser,
   loginUser,
   confirmEmail,
-  // forgotPassword,
-  // resetPassword,
+  forgotPassword,
+  resetForgottenPassword,
   resendEmailConfirmationToken,
 };
