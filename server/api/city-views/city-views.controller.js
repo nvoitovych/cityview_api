@@ -1,4 +1,7 @@
-const { cityView } = require('../../services/city-views.service');
+const {
+  cityView, doesImageExistInCloudStorage, streamFileToCloudStorage,
+  generateFilenameForCloudStorage,
+} = require('../../services/city-views.service');
 
 
 const getCityViewList = async (req, res) => {
@@ -33,15 +36,54 @@ const getCityViewDetail = async (req, res) => {
 };
 
 // TODO: add extracting address from latitude, longitude(with google places API)
-// TODO: add photo saving in google storage
+// TODO: should delete uploaded file if error has occured during saving data in DB, etc?
 const createCityView = async (req, res) => {
-  const { cityViewObj } = req.app.locals;
+  const { cityViewObj, imageFile } = req.app.locals;
   const street = '';
   const city = '';
   const region = '';
   const country = '';
+  const unixtime = new Date().getTime();
+  const imageFileName = await generateFilenameForCloudStorage(req.app.locals.userId, unixtime)
+    .catch((error) => {
+      console.error('imageStreamResult | error: ', error);
+      switch (error.code) {
+        default: {
+          res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+          break;
+        }
+      }
+    });
+
+  const doesImageExistInCloudStorageResult = await doesImageExistInCloudStorage(imageFileName)
+    .catch((error) => {
+      console.error('doesImageExistInGCS | error: ', error);
+      switch (error.code) {
+        default: {
+          res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+          break;
+        }
+      }
+    });
+  if (typeof doesImageExistInCloudStorageResult === 'undefined') return;
+  if (doesImageExistInCloudStorageResult) {
+    res.status(400).send({ code: 400, status: 'BAD_REQUEST', message: 'Image this same name is already exists' });
+    return;
+  }
+  // return url
+  const url = await streamFileToCloudStorage(imageFile, imageFileName).catch((error) => {
+    console.error('imageStreamResult | error: ', error);
+    switch (error.code) {
+      default: {
+        res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+        break;
+      }
+    }
+  });
+  if (typeof url === 'undefined') return;
+
   const mappedCityViewObj = {
-    ...cityViewObj, status: 'processing', street, city, region, country, createdAt: new Date(),
+    ...cityViewObj, imageURL: url, status: 'processing', street, city, region, country, createdAt: new Date(),
   };
 
   const resultCityViews = await cityView.createOne(mappedCityViewObj)
