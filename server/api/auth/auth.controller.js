@@ -99,8 +99,34 @@ const loginUser = async (req, res) => {
   res.status(200).send({ token });
 };
 
+// Generate the Token for the user authenticated in the request
+const handleSocialLogin = async (req, res) => {
+  if (!req.user || !req.user.uid) {
+    res.status(400).send({ code: 400, status: 'BAD_REQUEST', message: 'Bad request' });
+    return;
+  }
+
+  const accessToken = await jwt
+    .signAsync({
+      id: req.user.uid,
+      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7),
+    }, TOKEN_SECRET)
+    .catch((error) => {
+      switch (error.code) {
+        default: {
+          res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+          break;
+        }
+      }
+    });
+  if (typeof token === 'undefined') return;
+
+  res.status(200).send({ token: accessToken });
+};
+
 
 module.exports = {
   registerUser,
   loginUser,
+  handleSocialLogin,
 };

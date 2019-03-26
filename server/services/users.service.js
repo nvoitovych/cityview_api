@@ -32,9 +32,18 @@ const accountFindOneByUserId = async (userId) => {
   return mapper.account.one.toJson(resultAccountArray[0]);
 };
 
-const createUserAndAccount = async (email, password) => knex.transaction(t => knex('user_credentials')
+const userFindOne = async ({ provider, uid }) => {
+  const resultUserArray = await knex('user_credentials').where({ provider, uid }).limit(1);
+  return mapper.user.one.toJson(resultUserArray[0]);
+};
+
+const createUserAndAccount = async ({
+  email, name, password, provider, uid, photoUrl,
+}) => knex.transaction(t => knex('user_credentials')
   .transacting(t)
-  .insert({ email, password })
+  .insert({
+    name, email, password, provider, uid, photoUrl,
+  })
   .returning('id')
   .then(userId => knex('account')
     .transacting(t)
@@ -53,6 +62,7 @@ const userFind = async () => mapper.user.many.toJson(await knex('user_credential
 module.exports = {
   user: {
     find: userFind,
+    findOne: userFindOne,
     findById: userFindById,
     findByEmail: userFindByEmail,
     create: createUserAndAccount,

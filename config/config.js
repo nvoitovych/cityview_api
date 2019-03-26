@@ -3,5 +3,4 @@ const env = require('dotenv-flow').config({
   default_node_env: 'development',
 });
 
-
 module.exports.env = env;
