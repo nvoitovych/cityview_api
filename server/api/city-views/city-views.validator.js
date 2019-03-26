@@ -1,6 +1,12 @@
 /* eslint-disable max-len */
 const Joi = require('joi');
 
+const VALID_MIMETYPE = [
+  'image/jpg',
+  'image/jpeg',
+  'image/png',
+];
+
 
 const validateCityViewIdInURL = async (req, res, next) => {
   const cityViewId = parseInt(req.params.id, 10);
@@ -24,16 +30,16 @@ const validateCityViewIdInURL = async (req, res, next) => {
   next();
 };
 
-// TODO: add photo validation
 const validateCityViewReqBody = async (req, res, next) => {
   const cityView = {
     name: req.body.name,
     description: req.body.description,
     userId: parseInt(req.app.locals.userId, 10),
-    latitude: parseFloat(req.body.latitude).toFixed(5),
-    longitude: parseFloat(req.body.longitude).toFixed(5),
+    latitude: parseFloat(parseFloat(req.body.latitude).toFixed(5)),
+    longitude: parseFloat(parseFloat(req.body.longitude).toFixed(5)),
     yearOfOrigin: parseInt(req.body.yearOfOrigin, 10),
   };
+
   const now = new Date();
   const cityViewObjSchema = Joi.object().keys({
     latitude: Joi.number().min(-180).max(180).precision(5)
@@ -53,6 +59,7 @@ const validateCityViewReqBody = async (req, res, next) => {
   }).required();
 
   const cityViewValidationResult = await Joi.validate(cityView, cityViewObjSchema).catch((error) => {
+    // console.error('cityViewValidationResult | error: ', error);
     switch (error.name) {
       case 'ValidationError': {
         res.status(400).send(({ code: 400, status: 'BAD_REQUEST', message: 'Invalid city view parameters' }));
@@ -70,8 +77,29 @@ const validateCityViewReqBody = async (req, res, next) => {
   next();
 };
 
+const validateCityViewImage = async (req, res, next) => {
+  if (Object.keys(req.files).length === 0) {
+    res.status(400).send(({ code: 400, status: 'BAD_REQUEST', message: 'No files were uploaded' }));
+    return;
+  }
+
+  if (typeof req.files.imageFile === 'undefined') {
+    res.status(400).send(({ code: 400, status: 'BAD_REQUEST', message: 'No field "imageFile" was found' }));
+    return;
+  }
+
+  if (VALID_MIMETYPE.includes(req.files.imageFile.mimetype) === false) {
+    res.status(400).send(({ code: 400, status: 'BAD_REQUEST', message: `File should be one of [ ${VALID_MIMETYPE} ] mimetype` }));
+    return;
+  }
+
+  req.app.locals.imageFile = req.files.imageFile;
+  next();
+};
+
 
 module.exports = {
   validateId: validateCityViewIdInURL,
-  validateBody: validateCityViewReqBody,
+  validateCityView: validateCityViewReqBody,
+  validateCityViewImage,
 };

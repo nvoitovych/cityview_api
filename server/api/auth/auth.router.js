@@ -1,6 +1,5 @@
 const express = require('express');
 const {
-  // validateAuthReqBody,
   validateEmailConfirmationToken,
   validateEmail, validatePassword,
   validatePasswordResetCode,
