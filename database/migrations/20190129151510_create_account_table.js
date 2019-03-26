@@ -1,7 +1,7 @@
 
 exports.up = knex => knex.schema.createTable('account', (table) => {
   table.increments('id'); // id serial primary key
-  table.integer('user_id').unsigned();
+  table.integer('user_id').unsigned().notNullable();
   table.string('name');
   table.string('surname');
   table.string('avatar_url');

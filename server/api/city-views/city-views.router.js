@@ -11,6 +11,7 @@ publicRouter.get('/:id', validateId, getCityViewDetail);
 
 privateRouter.post('/', validateBody, createCityView);
 
+
 module.exports = {
   publicRouter,
   privateRouter,

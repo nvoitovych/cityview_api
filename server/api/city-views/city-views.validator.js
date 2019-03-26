@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 const Joi = require('joi');
 
+
 const validateCityViewIdInURL = async (req, res, next) => {
   const cityViewId = parseInt(req.params.id, 10);
 
@@ -23,6 +24,7 @@ const validateCityViewIdInURL = async (req, res, next) => {
   next();
 };
 
+// TODO: add photo validation
 const validateCityViewReqBody = async (req, res, next) => {
   const cityView = {
     name: req.body.name,
@@ -35,14 +37,19 @@ const validateCityViewReqBody = async (req, res, next) => {
   const now = new Date();
   const cityViewObjSchema = Joi.object().keys({
     latitude: Joi.number().min(-180).max(180).precision(5)
+      .strict()
       .required(),
     longitude: Joi.number().min(-90).max(90).precision(5)
+      .strict()
       .required(),
-    name: Joi.string().min(2).max(50).required(),
-    description: Joi.string().min(0).max(250),
+    name: Joi.string().min(2).max(50).strict()
+      .required(),
+    description: Joi.string().min(0).max(250).strict(),
     yearOfOrigin: Joi.number().integer().min(1750).max(now.getFullYear())
+      .strict()
       .required(),
-    userId: Joi.number().integer().min(0).required(),
+    userId: Joi.number().integer().min(0).strict()
+      .required(),
   }).required();
 
   const cityViewValidationResult = await Joi.validate(cityView, cityViewObjSchema).catch((error) => {
@@ -62,6 +69,7 @@ const validateCityViewReqBody = async (req, res, next) => {
   req.app.locals.cityViewObj = cityView;
   next();
 };
+
 
 module.exports = {
   validateId: validateCityViewIdInURL,
