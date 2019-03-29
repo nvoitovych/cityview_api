@@ -78,7 +78,7 @@ const validateCityViewReqBody = async (req, res, next) => {
 };
 
 const validateCityViewImage = async (req, res, next) => {
-  if (Object.keys(req.files).length === 0) {
+  if (typeof req.files === 'undefined' || !req.files || Object.keys(req.files).length === 0) {
     res.status(400).send(({ code: 400, status: 'BAD_REQUEST', message: 'No files were uploaded' }));
     return;
   }
