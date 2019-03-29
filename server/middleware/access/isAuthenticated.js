@@ -6,7 +6,7 @@ const { TOKEN_SECRET } = process.env;
 
 // check is JWT present in Authorzation header and is it valid
 const isAuthenticated = async (req, res, next) => {
-  const { authorization } = req.headers.authorization;
+  const { authorization } = req.headers;
   if (!authorization) {
     res.status(400).send({
       code: 400,

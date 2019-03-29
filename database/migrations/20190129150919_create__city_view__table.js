@@ -11,6 +11,7 @@ exports.up = knex => knex.schema.createTable('city_view', (table) => {
   table.string('city');
   table.string('region');
   table.string('country');
+  table.string('address');
   table.integer('user_id').unsigned();
   table.timestamp('updated_at', false);
   table.datetime('created_at').notNullable();

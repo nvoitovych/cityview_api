@@ -1,6 +1,6 @@
 const passport = require('passport');
 const passportFacebook = require('passport-facebook');
-const { facebookAuthStrategy } = require('../server/services/auth.service');
+const { facebookAuthStrategyHandler } = require('../server/services/auth.service');
 
 
 const passportFacebookConfig = {
@@ -11,8 +11,5 @@ const passportFacebookConfig = {
 };
 
 if (passportFacebookConfig.clientID) {
-  passport.use(new passportFacebook.Strategy(
-    passportFacebookConfig,
-    facebookAuthStrategy,
-  ));
+  passport.use(new passportFacebook.Strategy(passportFacebookConfig, facebookAuthStrategyHandler));
 }

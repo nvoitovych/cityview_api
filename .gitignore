@@ -1,4 +1,8 @@
-/city-view/node_modules
-/city-view/.idea
-/city-view/.env
-/city-view/.env.*
+/node_modules
+/.idea
+/config/.env
+/config/development.env
+/config/migrations.dev.env
+/config/migrations.prod.env
+/config/production.env
+/config/city-view-5f74b78e4679.json

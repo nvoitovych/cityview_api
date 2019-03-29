@@ -1,6 +1,6 @@
 const passport = require('passport');
-const passportGoogle = require('passport-google-oauth2');
-const { googleAuthStrategy } = require('../server/services/auth.service');
+const PassportGoogleStrategy = require('passport-google-oauth2').Strategy;
+const { googleAuthStrategyHandler } = require('../server/services/auth.service');
 
 
 const passportGoogleConfig = {
@@ -10,8 +10,5 @@ const passportGoogleConfig = {
 };
 
 if (passportGoogleConfig.clientID) {
-  passport.use(new passportGoogle.OAuth2Strategy(
-    passportGoogleConfig,
-    googleAuthStrategy,
-  ));
+  passport.use(new PassportGoogleStrategy(passportGoogleConfig, googleAuthStrategyHandler));
 }
