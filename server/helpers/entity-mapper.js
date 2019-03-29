@@ -3,6 +3,8 @@
 
 const userToJson = userDBObj => ({
   id: userDBObj.id,
+  googleId: userDBObj.google_id,
+  facebookId: userDBObj.facebook_id,
   email: userDBObj.email,
   password: userDBObj.password,
   username: userDBObj.username,
@@ -14,6 +16,8 @@ const userToJson = userDBObj => ({
 
 const userToDB = userJson => ({
   id: userJson.id,
+  google_id: userJson.googleId,
+  facebook_id: userJson.facebookId,
   email: userJson.email,
   password: userJson.password,
   username: userJson.username,

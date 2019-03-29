@@ -5,19 +5,26 @@ const { TOKEN_SECRET } = process.env;
 
 
 // check is JWT present in Authorzation header and is it valid
-const verifyJWT = async (req, res, next) => {
-  const authorizationHeaderExists = req.headers.authorization;
-
-  if (!authorizationHeaderExists) {
+const isAuthenticated = async (req, res, next) => {
+  const { authorization } = req.headers;
+  if (!authorization) {
     res.status(400).send({
       code: 400,
       status: 'BAD_REQUEST',
-      message: "Authorization header wasn't found or Auth Header is empty",
+      message: 'You must send an Authorization header',
     });
     return;
   }
 
-  const token = req.headers.authorization.split(' ')[1]; // example: jwt = 'Bearer token'
+  const [authType, token] = authorization.trim().split(' ');
+  if (authType !== 'Bearer') {
+    res.status(400).send({
+      code: 400,
+      status: 'BAD_REQUEST',
+      message: 'Expected a Bearer token',
+    });
+    return;
+  }
 
   if (!token) {
     res.status(400).send({ code: 400, status: 'BAD_REQUEST', message: "Token wasn't sent" });
@@ -53,5 +60,5 @@ const verifyJWT = async (req, res, next) => {
 
 
 module.exports = {
-  verifyJWT,
+  isAuthenticated,
 };
