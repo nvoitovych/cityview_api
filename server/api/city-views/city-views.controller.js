@@ -40,6 +40,52 @@ const getCityViewDetail = async (req, res) => {
   res.status(200).send(resultCityViews);
 };
 
+const deleteCityView = async (req, res) => {
+  const { cityViewId, userId } = req.app.locals;
+
+  const cityViewObj = await cityView.findById(cityViewId)
+    .catch((error) => {
+      switch (error.code) {
+        default: {
+          res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+          break;
+        }
+      }
+    });
+  if (typeof cityViewObj === 'undefined') return;
+
+  if (!cityViewObj) {
+    res.status(404).send({ code: 404, status: 'NOT_FOUND', message: 'Resource not found' });
+    return;
+  }
+
+  const isOwner = (cityViewObj.userId === userId);
+
+  if (!isOwner) {
+    res.status(403).send({ code: 403, status: 'FORBIDDEN', message: 'User don`t have permission to delete this resource' });
+    return;
+  }
+
+  // delete only if user with userId is owner of cityView
+  const deletedCityView = await cityView.delete(cityViewId)
+    .catch((error) => {
+      switch (error.code) {
+        default: {
+          res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+          break;
+        }
+      }
+    });
+  if (typeof deletedCityView === 'undefined') return;
+
+  if (!deletedCityView) {
+    res.status(409).send({ code: 409, status: 'CONFLICT', message: 'Resource cannot be deleted at the moment. Try later' });
+    return;
+  }
+
+  res.status(200).send({ success: true });
+};
+
 // TODO: add extracting address from latitude, longitude(with google places API)
 const createCityView = async (req, res) => {
   const { cityViewObj, imageFile } = req.app.locals;
@@ -115,5 +161,6 @@ const createCityView = async (req, res) => {
 module.exports = {
   getCityViewList,
   createCityView,
+  deleteCityView,
   getCityViewDetail,
 };

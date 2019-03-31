@@ -1,22 +1,43 @@
 const stream = require('stream');
 
 const knex = require('./database.service');
-const { storage } = require('../../config/gcstorage-setup');
 const mapper = require('../helpers/entity-mapper');
+const { storage } = require('../../config/gcstorage-setup');
+
 
 const BUCKET_NAME = process.env.GC_STORAGE_BUCKET_NAME;
 
-
 const cityViewFindById = async (id) => {
-  const resultCityViewArray = await knex('city_view').where({ id });
+  const resultCityViewArray = await knex('city_view')
+    .where({ id })
+    .catch((error) => {
+      throw error;
+    });
   if (Array.isArray(resultCityViewArray) && resultCityViewArray.length) {
     return mapper.cityView.one.toJson(resultCityViewArray[0]);
   }
   return null;
 };
 
+// delete cityView only if cityView is created by user with userId
+const cityViewDeleteById = async (cityViewId) => {
+  const deletedCityView = await knex('city_view')
+    .where({ id: cityViewId })
+    .del()
+    .returning('*')
+    .catch((error) => {
+      throw error;
+    });
+
+  return deletedCityView;
+};
+
 const cityViewFindAll = async () => {
-  const resultCityViewArray = await knex('city_view').select('*');
+  const resultCityViewArray = await knex('city_view')
+    .select('*')
+    .catch((error) => {
+      throw error;
+    });
   if (Array.isArray(resultCityViewArray) && resultCityViewArray.length) {
     return mapper.cityView.many.toJson(resultCityViewArray);
   }
@@ -42,7 +63,10 @@ const createOneCityView = async ({
     region,
     country,
   })
-  .returning('id');
+  .returning('id')
+  .catch((error) => {
+    throw error;
+  });
 
 const generateFilenameForCloudStorage = async (userId, unixtime) => {
   const filename = `${unixtime}-${userId}`;
@@ -102,6 +126,7 @@ const streamFileToCloudStorage = async (imageFile, imageFileName) => {
 
 module.exports = {
   cityView: {
+    delete: cityViewDeleteById,
     findAll: cityViewFindAll,
     findById: cityViewFindById,
     createOne: createOneCityView,

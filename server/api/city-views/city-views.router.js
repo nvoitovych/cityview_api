@@ -1,6 +1,6 @@
 const express = require('express');
 const {
-  getCityViewList, getCityViewDetail, createCityView,
+  getCityViewList, getCityViewDetail, createCityView, deleteCityView,
 } = require('./city-views.controller');
 const {
   validateId, validateCityViewImage, validateCityView,
@@ -15,6 +15,7 @@ publicRouter.get('/', getCityViewList);
 publicRouter.get('/:id', validateId, getCityViewDetail);
 
 privateRouter.post('/', validateCityView, validateCityViewImage, createCityView);
+privateRouter.delete('/:id', validateId, deleteCityView);
 
 
 module.exports = {
