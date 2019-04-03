@@ -165,6 +165,32 @@ const createUserAndAccount = async ({
   return result;
 };
 
+// TODO: fix if user is deleted his cityViews should be deleted also/
+const deleteUserCredentialsAndAccount = async (userId) => {
+  const result = await knex.transaction(async (trx) => {
+    const userIds = await trx('account')
+      .where({ user_id: userId })
+      .del()
+      .returning('user_id') // returns an array of ids
+      .catch(async (error) => {
+        await trx.rollback(error);
+        throw error;
+      });
+    await trx('user_credentials')
+      .del()
+      .where({ id: userId })
+      .returning('id') // returns an array of ids
+      .catch(async (error) => {
+        await trx.rollback(error);
+        throw error;
+      });
+    await trx.commit(userIds[0]);
+  }).catch((error) => {
+    throw error;
+  });
+  return result;
+};
+
 
 module.exports = {
   user: {
@@ -175,6 +201,7 @@ module.exports = {
     updateById: userUpdate,
     updateByEmail: userUpdateByEmail,
     create: createUserAndAccount,
+    delete: deleteUserCredentialsAndAccount,
   },
   account: {
     find: accountFind,

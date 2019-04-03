@@ -19,7 +19,6 @@ const cityViewFindById = async (id) => {
   return null;
 };
 
-// delete cityView only if cityView is created by user with userId
 const cityViewDeleteById = async (cityViewId) => {
   const deletedCityView = await knex('city_view')
     .where({ id: cityViewId })
