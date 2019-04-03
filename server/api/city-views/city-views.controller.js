@@ -33,7 +33,7 @@ const getCityViewDetail = async (req, res) => {
   if (typeof resultCityViews === 'undefined') return;
 
   if (!resultCityViews) {
-    res.status(404).send({ code: 404, status: 'NOT_FOUND', message: 'Not Found' });
+    res.status(404).send({ code: 404, status: 'NOT_FOUND', message: 'Resource not found' });
     return;
   }
 
@@ -157,10 +157,111 @@ const createCityView = async (req, res) => {
   res.status(200).send({ success: true });
 };
 
+// TODO: handle too much fields is passing as 400 error
+const updateCityView = async (req, res) => {
+  const {
+    cityViewObj, imageFile, cityViewId, userId,
+  } = req.app.locals;
+  const street = '';
+  const city = '';
+  const region = '';
+  const country = '';
+  let url;
+  const unixtime = new Date().getTime();
+
+  const foundCityView = await cityView.findById(cityViewId)
+    .catch((error) => {
+      switch (error.code) {
+        default: {
+          res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+          break;
+        }
+      }
+    });
+  if (typeof foundCityView === 'undefined') return;
+
+  if (!foundCityView) {
+    res.status(404).send({ code: 404, status: 'NOT_FOUND', message: 'Resource not found' });
+    return;
+  }
+
+  const isOwner = (foundCityView.userId === userId);
+
+  if (!isOwner) {
+    res.status(403).send({ code: 403, status: 'FORBIDDEN', message: 'User don`t have permission to patch this resource' });
+    return;
+  }
+
+
+  if (typeof imageFile !== 'undefined') {
+    const imageFileName = await generateFilenameForCloudStorage(req.app.locals.userId, unixtime)
+      .catch((error) => {
+        console.error('imageStreamResult | error: ', error);
+        switch (error.code) {
+          default: {
+            res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+            break;
+          }
+        }
+      });
+
+    const doesImageExistInCloudStorageResult = await doesImageExistInCloudStorage(imageFileName)
+      .catch((error) => {
+        console.error('doesImageExistInGCS | error: ', error);
+        switch (error.code) {
+          default: {
+            res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+            break;
+          }
+        }
+      });
+    if (typeof doesImageExistInCloudStorageResult === 'undefined') return;
+    if (doesImageExistInCloudStorageResult) {
+      res.status(400).send({ code: 400, status: 'BAD_REQUEST', message: 'Image this same name is already exists' });
+      return;
+    }
+    // return url
+    url = await streamFileToCloudStorage(imageFile, imageFileName).catch((error) => {
+      console.error('imageStreamResult | error: ', error);
+      switch (error.code) {
+        default: {
+          res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+          break;
+        }
+      }
+    });
+    if (typeof url === 'undefined') return;
+  }
+
+  const mappedCityViewObj = {
+    ...cityViewObj, imageURL: url, street, city, region, country, cityViewId,
+  };
+
+  const updatedCityView = await cityView.update(mappedCityViewObj)
+    .catch((error) => {
+      console.error('updatedCityView | error: ', error);
+      switch (error.code) {
+        default: {
+          res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+          break;
+        }
+      }
+    });
+  if (typeof updatedCityView === 'undefined') return;
+
+  if (!updatedCityView) {
+    res.status(409).send({ code: 409, status: 'CONFLICT', message: 'City view wasn`t updated' });
+    return;
+  }
+
+  res.status(200).send({ success: true });
+};
+
 
 module.exports = {
   getCityViewList,
   createCityView,
   deleteCityView,
   getCityViewDetail,
+  updateCityView,
 };

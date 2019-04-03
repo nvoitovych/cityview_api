@@ -75,11 +75,12 @@ const generateFilenameForCloudStorage = async (userId, unixtime) => {
 
 const doesImageExist = async (filename) => {
   // check if a file exists in bucket
-  const bucket = await storage.bucket(BUCKET_NAME);
+  const bucket = storage.bucket(BUCKET_NAME);
   const file = bucket.file(filename);
   const exists = await file.exists().catch((error) => {
     throw error;
-  }); // returns [true | false]
+  });
+  // returns [true | false]
   if (exists[0]) {
     return true;
   }
@@ -123,9 +124,38 @@ const streamFileToCloudStorage = async (imageFile, imageFileName) => {
   return url;
 };
 
+const cityViewUpdateById = async ({
+  cityViewId, name, description, latitude, longitude, yearOfOrigin,
+  status, street, city, region, country, imageURL,
+}) => {
+  const updatedCityView = await knex('city_view')
+    .where({ id: cityViewId })
+    .update({
+      name,
+      description,
+      latitude,
+      longitude,
+      year_of_origin: yearOfOrigin,
+      status,
+      street,
+      city,
+      region,
+      country,
+      photo_url: imageURL,
+    })
+    .returning('id')
+    .catch((error) => {
+      throw error;
+    });
+  if (!updatedCityView) return null;
+
+  return { success: true };
+};
+
 
 module.exports = {
   cityView: {
+    update: cityViewUpdateById,
     delete: cityViewDeleteById,
     findAll: cityViewFindAll,
     findById: cityViewFindById,

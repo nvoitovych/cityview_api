@@ -1,9 +1,10 @@
 const express = require('express');
 const {
-  getCityViewList, getCityViewDetail, createCityView, deleteCityView,
+  getCityViewList, getCityViewDetail, createCityView, deleteCityView, updateCityView,
 } = require('./city-views.controller');
 const {
   validateId, validateCityViewImage, validateCityView,
+  validateUpdateCityView, validateUpdateCityViewImage,
 } = require('./city-views.validator');
 
 
@@ -14,7 +15,9 @@ const privateRouter = express.Router();
 publicRouter.get('/', getCityViewList);
 publicRouter.get('/:id', validateId, getCityViewDetail);
 
+// TODO: add put method to CityView
 privateRouter.post('/', validateCityView, validateCityViewImage, createCityView);
+privateRouter.patch('/:id', validateId, validateUpdateCityView, validateUpdateCityViewImage, updateCityView);
 privateRouter.delete('/:id', validateId, deleteCityView);
 
 
