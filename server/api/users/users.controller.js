@@ -1,3 +1,7 @@
+const {
+  doesFileExistInCloudStorage, streamFileToCloudStorage,
+  generateFilenameForCloudStorage,
+} = require('../../helpers/utils');
 const { account, user } = require('../../services/users.service');
 
 
@@ -71,7 +75,6 @@ const deleteUserCredentialsAndAccount = async (req, res) => {
   const deletedUserAndAccount = await user.delete(userId)
     .catch((error) => {
       console.error('deleteUserCredentialsAndAccount | deletedUserAndAccount | error: ', error);
-
       switch (error.code) {
         default: {
           res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
@@ -89,14 +92,74 @@ const deleteUserCredentialsAndAccount = async (req, res) => {
   res.status(200).send({ success: true });
 };
 
-// TODO: handle too much fields is passing as 400 error
 const updateUserCredentialsAndAccount = async (req, res) => {
+  const { userId, avatarFile } = req.app.locals;
   const {
-    accountObj, userCredentialsObj, userId,
-  } = req.app.locals;
+    // email,
+    password,
+    username,
+    isEmployee,
+    isActive,
+    googleId,
+    facebookId,
+    name,
+    surname,
+  } = req.app.locals.userProfile;
+
+  let avatarURL;
+  if (avatarFile) {
+    const unixtime = new Date().getTime();
+    const imageFileName = await generateFilenameForCloudStorage(req.app.locals.userId, unixtime)
+      .catch((error) => {
+        console.error('imageStreamResult | error: ', error);
+        switch (error.code) {
+          default: {
+            res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+            break;
+          }
+        }
+      });
+
+    const doesImageExistInCloudStorageResult = await doesFileExistInCloudStorage(imageFileName)
+      .catch((error) => {
+        console.error('doesImageExistInGCS | error: ', error);
+        switch (error.code) {
+          default: {
+            res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+            break;
+          }
+        }
+      });
+    if (typeof doesImageExistInCloudStorageResult === 'undefined') return;
+    if (doesImageExistInCloudStorageResult) {
+      res.status(400).send({ code: 400, status: 'BAD_REQUEST', message: 'Image this same name is already exists' });
+      return;
+    }
+    // return url
+    avatarURL = await streamFileToCloudStorage(avatarFile, imageFileName).catch((error) => {
+      console.error('imageStreamResult | error: ', error);
+      switch (error.code) {
+        default: {
+          res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+          break;
+        }
+      }
+    });
+    if (typeof avatarURL === 'undefined') return;
+  }
 
   const mappedProfileObj = {
-    ...accountObj, ...userCredentialsObj, userId,
+    userId,
+    // email,
+    password,
+    username,
+    isEmployee,
+    isActive,
+    googleId,
+    facebookId,
+    name,
+    surname,
+    avatarURL,
   };
 
   const updatedProfile = await user.update(mappedProfileObj)

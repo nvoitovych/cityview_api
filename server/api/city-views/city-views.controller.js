@@ -1,8 +1,10 @@
 const {
-  cityView, doesImageExistInCloudStorage, streamFileToCloudStorage,
-  generateFilenameForCloudStorage,
+  cityView,
 } = require('../../services/city-views.service');
-
+const {
+  doesFileExistInCloudStorage, streamFileToCloudStorage,
+  generateFilenameForCloudStorage,
+} = require('../../helpers/utils');
 
 const getCityViewList = async (req, res) => {
   const resultCityViews = await cityView.findAll()
@@ -105,7 +107,7 @@ const createCityView = async (req, res) => {
       }
     });
 
-  const doesImageExistInCloudStorageResult = await doesImageExistInCloudStorage(imageFileName)
+  const doesImageExistInCloudStorageResult = await doesFileExistInCloudStorage(imageFileName)
     .catch((error) => {
       console.error('doesImageExistInGCS | error: ', error);
       switch (error.code) {
@@ -205,7 +207,7 @@ const updateCityView = async (req, res) => {
         }
       });
 
-    const doesImageExistInCloudStorageResult = await doesImageExistInCloudStorage(imageFileName)
+    const doesImageExistInCloudStorageResult = await doesFileExistInCloudStorage(imageFileName)
       .catch((error) => {
         console.error('doesImageExistInGCS | error: ', error);
         switch (error.code) {

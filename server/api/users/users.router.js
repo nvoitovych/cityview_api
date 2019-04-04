@@ -2,11 +2,12 @@ const express = require('express');
 const {
   getPublicAccountList, getPrivateAccountDetail,
   getPublicAccountDetail, deleteAccount,
-  // updateUserProfile,
+  updateUserProfile,
 } = require('./users.controller');
 const {
   validateId,
-  // validateUpdateUserProfile,
+  validateUpdateAvatarImage,
+  validateUpdateUserProfile,
 } = require('./users.validator');
 
 
@@ -17,6 +18,7 @@ publicRouter.get('/', getPublicAccountList);
 publicRouter.get('/:userId', validateId, getPublicAccountDetail);
 
 privateRouter.delete('/me', deleteAccount);
+privateRouter.patch('/me', validateUpdateAvatarImage, validateUpdateUserProfile, updateUserProfile);
 privateRouter.get('/me', getPrivateAccountDetail);
 // privateRouter.patch('/me', validateUpdateUserProfile, updateUserProfile);
 

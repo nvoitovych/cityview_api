@@ -17,6 +17,7 @@ exports.up = knex => knex.schema.createTable('city_view', (table) => {
   table.datetime('created_at').notNullable();
   table.enu('status', ['banned', 'active', 'processing']).notNullable();
 
+  // .onDelete(Set NULL | CASCADE | RESTRICT | NO ACTION) ?
   table.foreign('user_id').references('id').inTable('user_credentials');
 });
 exports.down = knex => knex.schema.dropTable('city_view');

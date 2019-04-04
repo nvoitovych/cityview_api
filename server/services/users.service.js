@@ -165,10 +165,17 @@ const createUserAndAccount = async ({
   return result;
 };
 
-// TODO: fix if user is deleted his cityViews should be deleted also/
 const deleteUserCredentialsAndAccount = async (userId) => {
   const result = await knex.transaction(async (trx) => {
-    const userIds = await trx('account')
+    await trx('account')
+      .where({ user_id: userId })
+      .del()
+      .returning('user_id') // returns an array of ids
+      .catch(async (error) => {
+        await trx.rollback(error);
+        throw error;
+      });
+    await trx('city_view')
       .where({ user_id: userId })
       .del()
       .returning('user_id') // returns an array of ids
@@ -184,10 +191,62 @@ const deleteUserCredentialsAndAccount = async (userId) => {
         await trx.rollback(error);
         throw error;
       });
-    await trx.commit(userIds[0]);
+    await trx.commit({ success: true });
   }).catch((error) => {
     throw error;
   });
+  return result;
+};
+
+const updateUserCredentialsAndAccount = async ({
+  userId,
+  email,
+  password,
+  username,
+  isEmployee,
+  isActive,
+  googleId,
+  facebookId,
+  name,
+  surname,
+  avatarURL,
+}) => {
+  const result = await knex.transaction(async (trx) => {
+    // check is update data does not contain any values to update
+    // if update data is empty -- error will be thrown
+    if (email || password || username || isEmployee || isActive || googleId || facebookId) {
+      await trx('user_credentials').where({ id: userId }).update({
+        email,
+        password,
+        username,
+        is_employee: isEmployee,
+        is_active: isActive,
+        google_id: googleId,
+        facebook_id: facebookId,
+      }).catch(async (error) => {
+        await trx.rollback(error);
+        throw error;
+      });
+    }
+    if (name || surname || avatarURL) {
+      await trx('account')
+        .where({ user_id: userId })
+        .update({
+          name,
+          surname,
+          avatar_url: avatarURL,
+        })
+        .catch(async (error) => {
+          await trx.rollback(error);
+          throw error;
+        });
+    }
+
+    await trx.commit({ success: true });
+  }).catch((error) => {
+    throw error;
+  });
+
   return result;
 };
 
@@ -200,6 +259,7 @@ module.exports = {
     findByEmail: userFindByEmail,
     updateById: userUpdate,
     updateByEmail: userUpdateByEmail,
+    update: updateUserCredentialsAndAccount,
     create: createUserAndAccount,
     delete: deleteUserCredentialsAndAccount,
   },
