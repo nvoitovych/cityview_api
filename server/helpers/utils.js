@@ -21,7 +21,6 @@ const generateFilenameForCloudStorage = async (userId, unixtime) => {
 
 const doesFileExist = async (filename) => {
   // check if a file exists in bucket
-  console.log(process.env.GC_STORAGE_BUCKET_NAME);
   const bucket = storage.bucket(process.env.GC_STORAGE_BUCKET_NAME);
   const file = bucket.file(filename);
   const exists = await file.exists().catch((error) => {
@@ -49,7 +48,6 @@ const streamFileToCloudStorage = async (imageFile, imageFileName) => {
 
   // Define file & file name.
   const file = myBucket.file(imageFileName);
-  // console.log('file: ', file);
 
   // Pipe the 'bufferStream' into a 'file.createWriteStream' method.
   bufferStream.pipe(file.createWriteStream({

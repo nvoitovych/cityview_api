@@ -1,7 +1,6 @@
 require('./config/config-env');
 
 
-// TODO: check does db properly work with cyrilic, etc encodings
 module.exports = {
   client: 'mysql',
   version: '5.7.2',

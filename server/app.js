@@ -15,7 +15,6 @@ const { handleInvalidReqBody } = require('./middleware/error-handlers/handle-inv
 
 const app = express();
 
-// TODO: fix encoding in DB(add utf-16)
 // TODO: handle wrong Headers(Content-Type, etc.)
 app.use(passport.initialize());
 app.use(cors);
