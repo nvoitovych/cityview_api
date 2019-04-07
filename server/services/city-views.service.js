@@ -1,5 +1,6 @@
 const knex = require('./database.service');
 const mapper = require('../helpers/entity-mapper');
+const { googleMapsClient } = require('../../config/google-places-setup');
 
 
 const cityViewFindById = async (id) => {
@@ -40,7 +41,7 @@ const cityViewFindAll = async () => {
 
 const createOneCityView = async ({
   userId, name, description, latitude, longitude, yearOfOrigin,
-  status, createdAt, street, city, region, country, imageURL,
+  status, createdAt, streetNumber, street, city, region, district, country, imageURL,
 }) => knex('city_view')
   .insert({
     user_id: userId,
@@ -52,9 +53,11 @@ const createOneCityView = async ({
     photo_url: imageURL,
     status,
     created_at: createdAt,
+    street_number: streetNumber,
     street,
     city,
     region,
+    district,
     country,
   })
   .returning('id')
@@ -64,7 +67,7 @@ const createOneCityView = async ({
 
 const cityViewUpdateById = async ({
   cityViewId, name, description, latitude, longitude, yearOfOrigin,
-  status, street, city, region, country, imageURL,
+  status, streetNumber, street, city, region, district, country, imageURL,
 }) => {
   const updatedCityView = await knex('city_view')
     .where({ id: cityViewId })
@@ -75,9 +78,11 @@ const cityViewUpdateById = async ({
       longitude,
       year_of_origin: yearOfOrigin,
       status,
+      street_number: streetNumber,
       street,
       city,
       region,
+      district,
       country,
       photo_url: imageURL,
     })
@@ -90,6 +95,70 @@ const cityViewUpdateById = async ({
   return { success: true };
 };
 
+const reverseGeo = async ({ latitude, longitude }) => {
+  const result = await googleMapsClient
+    .reverseGeocode({ latlng: [latitude, longitude].join(', '), language: 'uk' })
+    .asPromise();
+
+  if (typeof result === 'undefined' || typeof result.status === 'undefined'
+    || result.status !== 200 || typeof result.json.results === 'undefined'
+    || result.json.status !== 'OK') {
+    const error = Error();
+    throw error;
+  }
+
+  let streetNumber;
+  let street;
+  let city;
+  let region;
+  let district;
+  let country;
+
+  if (Array.isArray(result.json.results) && result.json.results.length) {
+    const addressComponents = result.json.results[0].address_components;
+    if (Array.isArray(addressComponents) && addressComponents.length) {
+      addressComponents.forEach((component) => {
+        switch (component.types[0]) {
+          case 'street_number': {
+            streetNumber = component.long_name;
+            break;
+          }
+          case 'route': {
+            street = component.long_name;
+            break;
+          }
+          case 'locality': {
+            city = component.long_name;
+            break;
+          }
+          case 'administrative_area_level_1': {
+            region = component.long_name;
+            break;
+          }
+          case 'administrative_area_level_2': {
+            district = component.long_name;
+            break;
+          }
+          case 'country': {
+            country = component.long_name;
+            break;
+          }
+          default: {
+            break;
+          }
+        }
+      });
+    }
+  } else {
+    const error = Error();
+    throw error;
+  }
+
+  return {
+    streetNumber, street, city, region, district, country,
+  };
+};
+
 
 module.exports = {
   cityView: {
@@ -99,4 +168,5 @@ module.exports = {
     findById: cityViewFindById,
     createOne: createOneCityView,
   },
+  reverseGeo,
 };

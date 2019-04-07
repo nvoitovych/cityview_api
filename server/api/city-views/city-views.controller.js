@@ -1,5 +1,5 @@
 const {
-  cityView,
+  cityView, reverseGeo,
 } = require('../../services/city-views.service');
 const {
   doesFileExistInCloudStorage, streamFileToCloudStorage,
@@ -91,10 +91,34 @@ const deleteCityView = async (req, res) => {
 // TODO: add extracting address from latitude, longitude(with google places API)
 const createCityView = async (req, res) => {
   const { cityViewObj, imageFile } = req.app.locals;
-  const street = '';
-  const city = '';
-  const region = '';
-  const country = '';
+
+  const result = await reverseGeo({
+    latitude: cityViewObj.latitude,
+    longitude: cityViewObj.longitude,
+  })
+    .catch((error) => {
+      console.error('reverseGeocode | error: ', error);
+      switch (error.code) {
+        default: {
+          res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+          break;
+        }
+      }
+    });
+
+  if (typeof result === 'undefined') return;
+
+
+  if (result === null) {
+    console.error('result: ', result);
+    res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+    return;
+  }
+  const {
+    streetNumber, street, city, region, district, country,
+  } = result;
+
+
   const unixtime = new Date().getTime();
   const imageFileName = await generateFilenameForCloudStorage(req.app.locals.userId, unixtime)
     .catch((error) => {
@@ -135,11 +159,21 @@ const createCityView = async (req, res) => {
   if (typeof url === 'undefined') return;
 
   const mappedCityViewObj = {
-    ...cityViewObj, imageURL: url, status: 'processing', street, city, region, country, createdAt: new Date(),
+    ...cityViewObj,
+    imageURL: url,
+    status: 'processing',
+    streetNumber,
+    street,
+    city,
+    region,
+    district,
+    country,
+    createdAt: new Date(),
   };
 
   const resultCityViews = await cityView.createOne(mappedCityViewObj)
     .catch((error) => {
+      console.error('resultCityViews | error: ', error);
       // Error depends on DB driver(MySQL, PostgreSQL, etc.)
       // ER_NO_REFERENCED_ROW_2 -- it`s error from MySQL
       // on trying to add city_view with user_id which doesn`t exist
@@ -159,15 +193,34 @@ const createCityView = async (req, res) => {
   res.status(200).send({ success: true });
 };
 
-// TODO: handle too much fields is passing as 400 error
 const updateCityView = async (req, res) => {
   const {
     cityViewObj, imageFile, cityViewId, userId,
   } = req.app.locals;
-  const street = '';
-  const city = '';
-  const region = '';
-  const country = '';
+
+  const result = await reverseGeo({
+    latitude: cityViewObj.latitude,
+    longitude: cityViewObj.longitude,
+  })
+    .catch((error) => {
+      console.error('reverseGeocode | error: ', error);
+      switch (error.code) {
+        default: {
+          res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+          break;
+        }
+      }
+    });
+
+  if (typeof result === 'undefined') return;
+
+  if (result === null) {
+    res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+    return;
+  }
+  const {
+    streetNumber, street, city, region, district, country,
+  } = result;
   let url;
   const unixtime = new Date().getTime();
 
@@ -236,7 +289,15 @@ const updateCityView = async (req, res) => {
   }
 
   const mappedCityViewObj = {
-    ...cityViewObj, imageURL: url, street, city, region, country, cityViewId,
+    ...cityViewObj,
+    imageURL: url,
+    streetNumber,
+    street,
+    city,
+    region,
+    district,
+    country,
+    cityViewId,
   };
 
   const updatedCityView = await cityView.update(mappedCityViewObj)

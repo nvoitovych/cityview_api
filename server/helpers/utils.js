@@ -69,8 +69,34 @@ const streamFileToCloudStorage = async (imageFile, imageFileName) => {
   return url;
 };
 
+// Converts numeric degrees to radians
+const toRadianSync = degree => degree * Math.PI / 180;
+
+// start and end are objects with latitude and longitude
+// decimals (default 2) is number of decimals in the output
+// return is distance in kilometers.
+const getDistanceSync = (start, end, precision) => {
+  const earthRadius = 6371; // km
+
+  const decimals = precision || 2;
+  const startLatDegree = parseFloat(start.latitude);
+  const endLatDegree = parseFloat(end.latitude);
+  const startLonDegree = parseFloat(start.longitude);
+  const endLonDegree = parseFloat(end.longitude);
+  const dLat = toRadianSync(endLatDegree - startLatDegree);
+  const dLon = toRadianSync(endLonDegree - startLonDegree);
+  const startLatRadian = toRadianSync(startLatDegree);
+  const endLatRadian = toRadianSync(endLatDegree);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+    + Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(startLatRadian) * Math.cos(endLatRadian);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const d = earthRadius * c;
+  return Math.round(d * (10 ** decimals) / (10 ** decimals));
+};
+
 
 module.exports = {
+  getDistanceSync,
   validateEnvSync,
   doesFileExistInCloudStorage: doesFileExist,
   generateFilenameForCloudStorage,

@@ -7,9 +7,11 @@ exports.up = knex => knex.schema.createTable('city_view', (table) => {
   table.double('longitude').notNullable();
   table.integer('year_of_origin').notNullable();
   table.string('photo_url').notNullable();
+  table.string('street_number');
   table.string('street');
   table.string('city');
   table.string('region');
+  table.string('district');
   table.string('country');
   table.string('address');
   table.integer('user_id').unsigned();
