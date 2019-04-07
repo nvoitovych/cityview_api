@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring */
 const {
   cityView, reverseGeo,
 } = require('../../services/city-views.service');
@@ -197,30 +198,57 @@ const updateCityView = async (req, res) => {
   const {
     cityViewObj, imageFile, cityViewId, userId,
   } = req.app.locals;
+  // init as 'undefined'
+  let streetNumber;
+  let street;
+  let city;
+  let region;
+  let district;
+  let country;
 
-  const result = await reverseGeo({
-    latitude: cityViewObj.latitude,
-    longitude: cityViewObj.longitude,
-  })
-    .catch((error) => {
-      console.error('reverseGeocode | error: ', error);
-      switch (error.code) {
-        default: {
-          res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
-          break;
+  if (cityViewObj.latitude && cityViewObj.longitude) {
+    // new latitude or longitude always have to be passed both
+    const address = await reverseGeo({
+      latitude: cityViewObj.latitude,
+      longitude: cityViewObj.longitude,
+    })
+      .catch((error) => {
+        console.error('reverseGeocode | error: ', error);
+        switch (error.code) {
+          default: {
+            res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+            break;
+          }
         }
-      }
-    });
+      });
 
-  if (typeof result === 'undefined') return;
+    if (typeof address === 'undefined') return;
 
-  if (result === null) {
-    res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
-    return;
+    if (address === null) {
+      console.error('reverseGeo result is null error');
+      res.status(500).send({ code: 500, status: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' });
+      return;
+    }
+    streetNumber = address.streetNumber;
+    street = address.street;
+    city = address.city;
+    region = address.region;
+    district = address.district;
+    country = address.country;
+
+    // check if returned address object contains any valuable data,
+    // if so set undefined properties as null.
+    // `cause, if no - after update in DB previous values of address properties will be saved
+    if (streetNumber || street || city || region || district || country) {
+      if (typeof streetNumber === 'undefined') streetNumber = null;
+      if (typeof street === 'undefined') street = null;
+      if (typeof city === 'undefined') city = null;
+      if (typeof region === 'undefined') region = null;
+      if (typeof district === 'undefined') district = null;
+      if (typeof country === 'undefined') country = null;
+    }
   }
-  const {
-    streetNumber, street, city, region, district, country,
-  } = result;
+
   let url;
   const unixtime = new Date().getTime();
 
@@ -246,7 +274,6 @@ const updateCityView = async (req, res) => {
     res.status(403).send({ code: 403, status: 'FORBIDDEN', message: 'User don`t have permission to patch this resource' });
     return;
   }
-
 
   if (typeof imageFile !== 'undefined') {
     const imageFileName = await generateFilenameForCloudStorage(req.app.locals.userId, unixtime)
